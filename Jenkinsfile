@@ -2,11 +2,11 @@ pipeline {
     agent any
 
     environment {
-        IMAGE_NAME = "ahmedgitworld/docker-jenkins-test:latest"
+        IMAGE_NAME = 'ahmed2472/docker-jenkins-test'
+        TAG = 'latest'
     }
 
     stages {
-        
         stage('Checkout') {
             steps {
                 git branch: 'main', url: 'https://github.com/AhmedGit-world/docker-jenkins-test.git'
@@ -16,7 +16,7 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    def image = docker.build("${IMAGE_NAME}")
+                    docker.build("${IMAGE_NAME}:${TAG}")
                 }
             }
         }
@@ -35,7 +35,7 @@ pipeline {
             steps {
                 script {
                     docker.withRegistry('https://index.docker.io/v1/', 'dockerhub') {
-                        def image = docker.image("${IMAGE_NAME}")
+                        def image = docker.image("${IMAGE_NAME}:${TAG}")
                         image.push()
                     }
                 }
