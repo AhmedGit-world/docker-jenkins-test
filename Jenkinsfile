@@ -2,30 +2,30 @@ pipeline {
     agent any
 
     environment {
-        IMAGE_NAME = "ahmed2472/myapp"
-        IMAGE_TAG = "latest"
+        IMAGE_NAME = "ahmedgitworld/docker-jenkins-test:latest"
     }
 
     stages {
         stage('Checkout') {
             steps {
-                // If using Git, replace with git repo
-                checkout scm
+                git 'https://github.com/AhmedGit-world/docker-jenkins-test.git'
             }
         }
 
         stage('Build Docker Image') {
             steps {
                 script {
-                    docker.build("${IMAGE_NAME}:${IMAGE_TAG}")
+                    def image = docker.build("${IMAGE_NAME}")
                 }
             }
         }
 
         stage('Login to Docker Hub') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                    sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
+                script {
+                    docker.withRegistry('https://index.docker.io/v1/', 'dockerhub') {
+                        echo 'Logged in to Docker Hub'
+                    }
                 }
             }
         }
@@ -33,7 +33,10 @@ pipeline {
         stage('Push Docker Image') {
             steps {
                 script {
-                    sh "docker push ${IMAGE_NAME}:${IMAGE_TAG}"
+                    docker.withRegistry('https://index.docker.io/v1/', 'dockerhub') {
+                        def image = docker.image("${IMAGE_NAME}")
+                        image.push()
+                    }
                 }
             }
         }
@@ -41,7 +44,7 @@ pipeline {
 
     post {
         always {
-            sh "docker logout"
+            sh 'docker logout'
         }
     }
 }
